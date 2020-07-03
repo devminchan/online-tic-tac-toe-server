@@ -72,7 +72,7 @@ export class State extends Schema {
 
     const newMark = new Mark({
       playerId,
-      turnNumber: this.turnCount++,
+      turnNumber: this.turnCount,
       point,
     });
 
@@ -104,7 +104,8 @@ export class State extends Schema {
   }
 
   private nextTurn() {
-    console.log("next turn");
+    this.turnCount += 1; // turnCount 증가
+
     const iterator = this.players._indexes.keys();
 
     let nextId = iterator.next().value;
@@ -117,8 +118,14 @@ export class State extends Schema {
   }
 
   private checkPointIsAvailable(point: number): boolean {
-    if (this.marks[point]) {
-      return false;
+    console.log(this.marks.length);
+
+    for (let i = 0; i < this.marks.length; i++) {
+      console.log(this.marks[i]);
+
+      if (this.marks[i].point === point) {
+        return false;
+      }
     }
 
     return true;
