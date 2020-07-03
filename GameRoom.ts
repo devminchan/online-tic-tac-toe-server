@@ -52,6 +52,9 @@ export class State extends Schema {
   @type("number")
   turnCount = 1;
 
+  @type("string")
+  nowPlayerId: string;
+
   @type([Mark])
   marks = new ArraySchema<Mark>();
 
@@ -75,7 +78,19 @@ export class State extends Schema {
 
     this.marks.push(newMark);
 
+    this.nextTurn(); // 다음턴 진행
+
     return newMark;
+  }
+
+  checkIsPlayerTurn(playerId: string): boolean {
+    console.log(`${this.nowPlayerId}, ${playerId}`);
+
+    if (this.nowPlayerId === playerId) {
+      return true;
+    }
+
+    return false;
   }
 
   checkGameEnd(): GameResult {
@@ -86,6 +101,19 @@ export class State extends Schema {
     }
 
     return null;
+  }
+
+  private nextTurn() {
+    console.log("next turn");
+    const iterator = this.players._indexes.keys();
+
+    let nextId = iterator.next().value;
+
+    if (nextId !== this.nowPlayerId) {
+      this.nowPlayerId = nextId;
+    } else {
+      this.nowPlayerId = iterator.next().value;
+    }
   }
 
   private checkPointIsAvailable(point: number): boolean {
@@ -105,18 +133,14 @@ export class GameRoom extends Room<State> {
     this.setState(new State());
 
     this.onMessage("mark", async (client, markCommand: MarkCommand) => {
-      const gameResult = this.state.checkGameEnd();
-
-      const nowPlayer: Player = this.state.players[client.sessionId];
-
-      // not my turn
-      if (this.state.turnCount % 2 === 0 && nowPlayer.isFirst) {
-        this.send(client, "messages", "[SYSTEM] wait for opponent turn...");
+      if (this.clients.length < 2) {
+        client.send("messages", "[SYSTEM] game not started");
+        return;
       }
 
-      // not my turn
-      if (this.state.turnCount % 2 === 1 && !nowPlayer.isFirst) {
-        this.send(client, "messages", "[SYSTEM] wait for opponent turn...");
+      if (!this.state.checkIsPlayerTurn(client.sessionId)) {
+        client.send("messages", "[SYSTEM] now is opponent turn");
+        return;
       }
 
       const newMark = this.state.createMark(
@@ -125,17 +149,23 @@ export class GameRoom extends Room<State> {
       );
 
       if (!newMark) {
-        this.send(client, "messages", "Can't place mark at this point");
+        client.send("messages", "[SYSTEM] can't place mark at this point");
+        return;
       } else {
         this.broadcast("gameEvent", newMark.toJSON());
       }
+
+      const gameResult = this.state.checkGameEnd();
 
       if (gameResult) {
         // when game ends
         this.broadcast("gameResult", gameResult);
         await this.disconnect();
-        return;
       }
+    });
+
+    this.onMessage("exit", (client, options) => {
+      client.leave();
     });
   }
 
@@ -145,7 +175,9 @@ export class GameRoom extends Room<State> {
 
     let player: Player = null;
 
-    if (this.clients.length > 0) {
+    console.log(`${client.sessionId} joined for game`);
+
+    if (this.state.players._indexes.size > 0) {
       player = new Player({
         username,
         isFirst: false,
@@ -155,16 +187,12 @@ export class GameRoom extends Room<State> {
         username,
         isFirst: true,
       });
+
+      this.state.nowPlayerId = client.sessionId; // 먼저 들어온 사람 선
     }
 
-    console.log(`${client.sessionId} joined for game`);
-
     this.state.players[client.sessionId] = player;
-
-    this.broadcast("joined", {
-      username: player.username,
-      isFirst: player.isFirst,
-    });
+    this.broadcast("joined", player.toJSON());
   }
 
   onLeave(client: Client, consented: boolean) {
