@@ -6,7 +6,7 @@ export class MyRoom extends Room {
   onCreate(options: any) {
     console.log("ChatRoom created!", options);
 
-    this.onMessage("message", (client, message) => {
+    this.onMessage("messages", (client, message) => {
       console.log(`Received message: ${message}`);
       this.broadcast("messages", `${client.sessionId} ${message}`);
     });
