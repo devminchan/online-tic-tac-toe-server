@@ -2,8 +2,10 @@
   "name": "my-app",
   "version": "1.0.0",
   "description": "npm init template for bootstraping an empty Colyseus project",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
+    "start:prod": "node dist/index.js",
     "start": "ts-node index.ts",
     "loadtest": "colyseus-loadtest loadtest/example.ts --room my_room --numClients 2",
     "test": "echo \"Error: no test specified\" && exit 1"
