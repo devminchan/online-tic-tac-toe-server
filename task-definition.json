@@ -22,7 +22,7 @@
     }
   ],
   "cpu": "256",
-  "executionRoleArn": "arn:aws:iam::012345678910:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::129403376983:role/ecsTaskExecutionRole",
   "family": "tic-tac-toe-task-definition",
   "memory": "512",
   "networkMode": "awsvpc",
