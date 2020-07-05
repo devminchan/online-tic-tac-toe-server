@@ -5,6 +5,6 @@ WORKDIR /home/app
 COPY . .
 
 RUN npm install
-RUN npm run build
+RUN npm run-script build
 
-CMD npm start:prod
+CMD npm run-script start:prod
