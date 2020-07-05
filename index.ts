@@ -34,5 +34,12 @@ gameServer.define("game_room", GameRoom);
 // register colyseus monitor AFTER registering your room handlers
 app.use("/colyseus", monitor());
 
+// for health check
+app.get("/health-check", (req, res) => {
+  res.json({
+    status: "OK",
+  });
+});
+
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${port}`);
