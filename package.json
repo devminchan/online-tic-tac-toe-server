@@ -7,6 +7,7 @@
     "build": "tsc",
     "start:prod": "node dist/index.js",
     "start": "ts-node index.ts",
+    "terraform": "cd deploy && terraform",
     "loadtest": "colyseus-loadtest loadtest/example.ts --room my_room --numClients 2",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
