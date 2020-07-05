@@ -1,0 +1,30 @@
+{
+  "containerDefinitions": [
+    {
+      "essential": true,
+      "image": "129403376983.dkr.ecr.ap-northeast-2.amazonaws.com/devminchan/online-tic-tac-toe-server:latest",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/tic-tac-toe-task-definition",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "name": "tic-tac-toe-container",
+      "portMappings": [
+        {
+          "containerPort": 2567,
+          "hostPort": 2567,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ],
+  "cpu": "256",
+  "executionRoleArn": "arn:aws:iam::012345678910:role/ecsTaskExecutionRole",
+  "family": "tic-tac-toe-task-definition",
+  "memory": "512",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"]
+}
