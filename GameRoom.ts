@@ -176,6 +176,17 @@ export class GameRoom extends Room<State> {
       }
     });
 
+    this.onMessage("message", (client, options) => {
+      const message: string = options.message;
+
+      if (message && message.length > 0 && message.trim().length > 0) {
+        const username = this.state.players[client.sessionId].username;
+        console.log("chatting", `[${username}] ${message}`);
+
+        this.broadcast("messages", `[${username}] ${message}`);
+      }
+    });
+
     this.onMessage("exit", (client, options) => {
       client.leave();
     });
