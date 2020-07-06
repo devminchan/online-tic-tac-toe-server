@@ -67,9 +67,11 @@ export class State extends Schema {
 
   createMark(playerId: string, point: number): Mark {
     if (!this.checkPointIsAvailable(point)) {
+      // 이미 mark가 놓여있는지 확인
       return null;
     }
 
+    // mark 생성 및 push
     const newMark = new Mark({
       playerId,
       turnNumber: this.turnCount,
@@ -78,14 +80,13 @@ export class State extends Schema {
 
     this.marks.push(newMark);
 
-    this.nextTurn(); // 다음턴 진행
+    this.nextTurn(); // 다음턴 진행 작업, 플레이어 교체 및 turnCount 증가
 
     return newMark;
   }
 
+  // 현재 플레이어 차례인지 확인
   checkIsPlayerTurn(playerId: string): boolean {
-    console.log(`${this.nowPlayerId}, ${playerId}`);
-
     if (this.nowPlayerId === playerId) {
       return true;
     }
@@ -93,8 +94,9 @@ export class State extends Schema {
     return false;
   }
 
+  // 현재 상태가 게임오버 조건인지 확인
   checkGameEnd(): GameResult {
-    if (this.turnCount > MAX_MARKS) {
+    if (this.turnCount >= MAX_MARKS) {
       return {
         winner: null,
       };
@@ -103,6 +105,7 @@ export class State extends Schema {
     return null;
   }
 
+  // 다음턴 진행 작업
   private nextTurn() {
     this.turnCount += 1; // turnCount 증가
 
@@ -110,6 +113,7 @@ export class State extends Schema {
 
     let nextId = iterator.next().value;
 
+    // 플레이어 교체
     if (nextId !== this.nowPlayerId) {
       this.nowPlayerId = nextId;
     } else {
@@ -118,8 +122,6 @@ export class State extends Schema {
   }
 
   private checkPointIsAvailable(point: number): boolean {
-    console.log(this.marks.length);
-
     for (let i = 0; i < this.marks.length; i++) {
       console.log(this.marks[i]);
 
@@ -141,10 +143,12 @@ export class GameRoom extends Room<State> {
 
     this.onMessage("mark", async (client, markCommand: MarkCommand) => {
       if (this.clients.length < 2) {
+        // 플레이어 2명이 아닐때
         client.send("messages", "[SYSTEM] game not started");
         return;
       }
 
+      // 현재 자신 턴이 아니면 작업 중지
       if (!this.state.checkIsPlayerTurn(client.sessionId)) {
         client.send("messages", "[SYSTEM] now is opponent turn");
         return;
@@ -156,6 +160,7 @@ export class GameRoom extends Room<State> {
       );
 
       if (!newMark) {
+        // 마크가 생성되지 않았을 때
         client.send("messages", "[SYSTEM] can't place mark at this point");
         return;
       } else {
@@ -203,12 +208,18 @@ export class GameRoom extends Room<State> {
   }
 
   onLeave(client: Client, consented: boolean) {
-    this.broadcast("messages", `${client.sessionId} left.`);
+    this.broadcast(
+      "messages",
+      `[SYSTEM] ${this.state.players[client.sessionId].username} left.`
+    );
 
-    delete this.state.players[client.sessionId];
+    this.state.players._indexes.delete(client.sessionId);
+
+    const iter = this.state.players._indexes.keys();
+    const winner = iter.next().value;
 
     this.broadcast("gameResult", {
-      winner: this.clients[0].sessionId,
+      winner: winner.username,
     } as GameResult);
 
     this.disconnect();
