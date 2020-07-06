@@ -58,6 +58,9 @@ export class State extends Schema {
   @type([Mark])
   marks = new ArraySchema<Mark>();
 
+  @type("boolean")
+  isOver = false;
+
   constructor() {
     super();
 
@@ -107,7 +110,7 @@ export class State extends Schema {
 
     if (isEnd) {
       return {
-        winner: this.nowPlayerId,
+        winner: this.players[this.nowPlayerId].username,
       };
     }
 
@@ -271,6 +274,8 @@ export class GameRoom extends Room<State> {
 
       if (gameResult) {
         // when game ends
+        this.state.isOver = true;
+
         this.broadcast("gameResult", gameResult);
         await this.disconnect();
       }
@@ -337,23 +342,25 @@ export class GameRoom extends Room<State> {
       `[SYSTEM] ${this.state.players[client.sessionId].username} left.`
     );
 
-    const iter = this.state.players._indexes.keys();
+    if (!this.state.isOver) {
+      const iter = this.state.players._indexes.keys();
 
-    let winnerSessionId = iter.next().value;
+      let winnerSessionId = iter.next().value;
 
-    // winnerSessionId가 나간 사람의 sessionId라면
-    if (winnerSessionId === client.sessionId) {
-      winnerSessionId = iter.next().value; // 나가지 않은 사람의 sessionId로 교체
+      // winnerSessionId가 나간 사람의 sessionId라면
+      if (winnerSessionId === client.sessionId) {
+        winnerSessionId = iter.next().value; // 나가지 않은 사람의 sessionId로 교체
+      }
+
+      this.broadcast("gameResult", {
+        winner: this.state.players[winnerSessionId].username,
+      } as GameResult);
+
+      this.disconnect().catch((e) => {
+        console.log(`An error occured!`);
+        console.error(e);
+      });
     }
-
-    this.broadcast("gameResult", {
-      winner: this.state.players[winnerSessionId].username,
-    } as GameResult);
-
-    this.disconnect().catch((e) => {
-      console.log(`An error occured!`);
-      console.error(e);
-    });
   }
 
   onDispose() {
