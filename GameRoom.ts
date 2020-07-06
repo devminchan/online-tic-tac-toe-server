@@ -80,8 +80,6 @@ export class State extends Schema {
 
     this.marks.push(newMark);
 
-    this.nextTurn(); // 다음턴 진행 작업, 플레이어 교체 및 turnCount 증가
-
     return newMark;
   }
 
@@ -102,11 +100,22 @@ export class State extends Schema {
       };
     }
 
+    const isEnd = this._checkGameEnd(
+      this.marks[this.marks.length - 1].point,
+      this.nowPlayerId
+    );
+
+    if (isEnd) {
+      return {
+        winner: this.nowPlayerId,
+      };
+    }
+
     return null;
   }
 
   // 다음턴 진행 작업
-  private nextTurn() {
+  nextTurn() {
     this.turnCount += 1; // turnCount 증가
 
     const iterator = this.players._indexes.keys();
@@ -123,14 +132,104 @@ export class State extends Schema {
 
   private checkPointIsAvailable(point: number): boolean {
     for (let i = 0; i < this.marks.length; i++) {
-      console.log(this.marks[i]);
-
       if (this.marks[i].point === point) {
         return false;
       }
     }
 
     return true;
+  }
+
+  private _checkGameEnd(point: number, playerId: string): boolean {
+    enum Direction {
+      TOP_LEFT,
+      TOP,
+      TOP_RIGHT,
+      RIGHT,
+      BOTTOM_RIGHT,
+      BOTTOM,
+      BOTTOM_LEFT,
+      LEFT,
+    }
+
+    const checkTmpVars = (tmpY: number, tmpX: number): boolean => {
+      if (tmpY < 0 && tmpY >= 10) {
+        return false;
+      } else if (tmpX < 0 && tmpX >= 10) {
+        return false;
+      }
+
+      return true;
+    };
+
+    let y = Math.floor(point / 10);
+    let x = point % 10;
+
+    for (let i = 0; i < 8; i++) {
+      let j = 0;
+
+      for (j = 0; j < 5; j++) {
+        let tmpY = y;
+        let tmpX = x;
+
+        switch (i as Direction) {
+          case Direction.TOP_LEFT:
+            tmpY -= j;
+            tmpX -= j;
+            break;
+          case Direction.TOP:
+            tmpY -= j;
+            break;
+          case Direction.TOP_RIGHT:
+            tmpY -= j;
+            tmpX += j;
+            break;
+          case Direction.RIGHT:
+            tmpX += j;
+            break;
+          case Direction.BOTTOM_RIGHT:
+            tmpY += j;
+            tmpX += j;
+            break;
+          case Direction.BOTTOM:
+            tmpY += j;
+            break;
+          case Direction.BOTTOM_LEFT:
+            tmpY += j;
+            tmpX -= j;
+            break;
+          case Direction.LEFT:
+            tmpX -= j;
+            break;
+        }
+
+        if (!checkTmpVars(tmpY, tmpX)) {
+          break;
+        }
+
+        console.log(`now checked: Y: ${tmpY}, X: ${tmpX}, ${point}`);
+
+        const target = this.marks.find(
+          (mark) => mark.point === tmpY * 10 + tmpX
+        );
+
+        console.log(
+          `target playerId: ${
+            target && target.playerId
+          }, now playerId: ${playerId}`
+        );
+
+        if (!target || target.playerId !== playerId) {
+          break;
+        }
+      }
+
+      if (j >= 5) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 
@@ -159,6 +258,9 @@ export class GameRoom extends Room<State> {
         markCommand.point
       );
 
+      const gameResult = this.state.checkGameEnd();
+      this.state.nextTurn(); // 다음턴 진행 작업, 플레이어 교체 및 turnCount 증가
+
       if (!newMark) {
         // 마크가 생성되지 않았을 때
         client.send("messages", "[SYSTEM] can't place mark at this point");
@@ -166,8 +268,6 @@ export class GameRoom extends Room<State> {
       } else {
         this.broadcast("gameEvent", newMark.toJSON());
       }
-
-      const gameResult = this.state.checkGameEnd();
 
       if (gameResult) {
         // when game ends
