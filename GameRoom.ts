@@ -198,7 +198,7 @@ export class GameRoom extends Room<State> {
 
     let player: Player = null;
 
-    console.log(`${client.sessionId} joined for game`);
+    console.log(`${client.sessionId} joined the game`);
 
     if (this.state.players._indexes.size > 0) {
       player = new Player({
@@ -215,7 +215,7 @@ export class GameRoom extends Room<State> {
     }
 
     this.state.players[client.sessionId] = player;
-    this.broadcast("joined", player.toJSON());
+    this.broadcast("messages", `[SYSTEM] ${username} joined`);
 
     const iter = this.state.players._indexes.keys();
     const playerList = [];
