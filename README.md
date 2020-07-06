@@ -1,33 +1,27 @@
-# `create-colyseus-app`
+### Online Tic-Tac-Toe
 
-An npm init template for kick starting a Colyseus project in TypeScript.
+매칭을 통해 온라인에서 TicTacToe 게임을 즐기는 서비스입니다.  
 
-## :crossed_swords: Usage
+![](/01.png)
 
-```
-npm init colyseus-app
-```
+[서비스 바로가기](https://www.online-tic-tac-toe.com/)  
+[노션 바로가기](https://www.notion.so/Online-Tic-Tac-Toe-2ebad11509434c08898bc2a43a9730d5)
 
-## Structure
+### 기술 스택
 
-- `index.ts`: main entry point, register an empty room handler and attach [`@colyseus/monitor`](https://github.com/colyseus/colyseus-monitor)
-- `MyRoom.ts`: an empty room handler for you to implement your logic
-- `loadtest/example.ts`: scriptable client for the loadtest tool (see `npm run loadtest`)
-- `package.json`:
-    - `scripts`:
-        - `npm start`: runs `ts-node index.ts`
-        - `npm run loadtest`: runs the [`@colyseus/loadtest`](https://github.com/colyseus/colyseus-loadtest/) tool for testing the connection, using the `loadtest/example.ts` script.
-    - `dependencies`:
-        - `colyseus`
-        - `@colyseus/monitor`
-        - `express`
-    - `devDependencies`
-        - `ts-node`
-        - `typescript`
-        - `@colyseus/loadtest`
-- `tsconfig.json`: TypeScript configuration file
+- 프론트엔드
+    - React, tailwind css, Colyseus.js
+- 백엔드
+    - Express.js, Colyseus.js, Typescript
+- 인프라
+    - AWS ECS (Fargate), Docker, AWS Amplify, Github (with Github Actions)
+    - Route53, ACM
 
+### 주요 기능
 
-## License
-
-MIT
+- 게임 매치메이킹 기능
+    - 자동 방 생성 및 참가
+- 보드위에 O/X 마킹 기능
+    - 실시간 게임 상황 공유
+- 채팅 기능
+- 승패 결과 알림
