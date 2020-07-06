@@ -205,6 +205,19 @@ export class GameRoom extends Room<State> {
 
     this.state.players[client.sessionId] = player;
     this.broadcast("joined", player.toJSON());
+
+    const iter = this.state.players._indexes.keys();
+    const playerList = [];
+
+    let targetId = iter.next().value;
+
+    if (this.state.players[targetId]) {
+      playerList.push(this.state.players[targetId]);
+    }
+
+    playerList.push(player.toJSON());
+
+    this.broadcast("players", playerList);
   }
 
   onLeave(client: Client, consented: boolean) {
@@ -226,7 +239,10 @@ export class GameRoom extends Room<State> {
       winner: this.state.players[winnerSessionId].username,
     } as GameResult);
 
-    this.disconnect();
+    this.disconnect().catch((e) => {
+      console.log(`An error occured!`);
+      console.error(e);
+    });
   }
 
   onDispose() {
