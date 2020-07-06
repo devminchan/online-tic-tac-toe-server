@@ -213,13 +213,17 @@ export class GameRoom extends Room<State> {
       `[SYSTEM] ${this.state.players[client.sessionId].username} left.`
     );
 
-    this.state.players._indexes.delete(client.sessionId);
-
     const iter = this.state.players._indexes.keys();
-    const winner = iter.next().value;
+
+    let winnerSessionId = iter.next().value;
+
+    // winnerSessionId가 나간 사람의 sessionId라면
+    if (winnerSessionId === client.sessionId) {
+      winnerSessionId = iter.next().value; // 나가지 않은 사람의 sessionId로 교체
+    }
 
     this.broadcast("gameResult", {
-      winner: winner.username,
+      winner: this.state.players[winnerSessionId].username,
     } as GameResult);
 
     this.disconnect();
