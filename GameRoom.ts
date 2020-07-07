@@ -20,7 +20,7 @@ export class Mark extends Schema {
   point: number;
 }
 
-const MAX_MARKS = 100;
+const MAX_MARKS = 361;
 
 export class Player extends Schema {
   constructor(params: { username: string; isFirst: boolean }) {
@@ -156,17 +156,17 @@ export class State extends Schema {
     }
 
     const checkTmpVars = (tmpY: number, tmpX: number): boolean => {
-      if (tmpY < 0 && tmpY >= 10) {
+      if (tmpY < 0 && tmpY >= 19) {
         return false;
-      } else if (tmpX < 0 && tmpX >= 10) {
+      } else if (tmpX < 0 && tmpX >= 19) {
         return false;
       }
 
       return true;
     };
 
-    let y = Math.floor(point / 10);
-    let x = point % 10;
+    let y = Math.floor(point / 19);
+    let x = point % 19;
 
     for (let i = 0; i < 8; i++) {
       let j = 0;
@@ -213,7 +213,7 @@ export class State extends Schema {
         console.log(`now checked: Y: ${tmpY}, X: ${tmpX}, ${point}`);
 
         const target = this.marks.find(
-          (mark) => mark.point === tmpY * 10 + tmpX
+          (mark) => mark.point === tmpY * 19 + tmpX
         );
 
         console.log(
