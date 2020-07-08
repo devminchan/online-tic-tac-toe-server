@@ -210,16 +210,8 @@ export class State extends Schema {
           break;
         }
 
-        console.log(`now checked: Y: ${tmpY}, X: ${tmpX}, ${point}`);
-
         const target = this.marks.find(
           (mark) => mark.point === tmpY * 19 + tmpX
-        );
-
-        console.log(
-          `target playerId: ${
-            target && target.playerId
-          }, now playerId: ${playerId}`
         );
 
         if (!target || target.playerId !== playerId) {
