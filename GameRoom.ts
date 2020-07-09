@@ -1,5 +1,9 @@
 import { Room, Client } from "colyseus";
 import { Schema, type, ArraySchema, MapSchema } from "@colyseus/schema";
+import jwt from "jsonwebtoken";
+import { DocumentType } from "@typegoose/typegoose";
+import { JWT_SECRET } from "./constrants";
+import UserModel, { User } from "./models/UserModel";
 
 export class Mark extends Schema {
   constructor(params: { playerId: string; turnNumber: number; point: number }) {
@@ -227,6 +231,8 @@ export class State extends Schema {
   }
 }
 
+type UserInfo = DocumentType<Exclude<User, "password">>;
+
 export class GameRoom extends Room<State> {
   maxClients = 2;
 
@@ -288,13 +294,35 @@ export class GameRoom extends Room<State> {
     });
   }
 
+  async onAuth(client: Client, options: any, request: any): Promise<UserInfo> {
+    const token = options.accessToken;
+    const decoded = this.validateToken(token) as UserInfo;
+
+    if (!decoded) {
+      throw new Error("can't recognize payload");
+    }
+
+    const user = await UserModel.findById(decoded._id);
+
+    if (!user) {
+      throw new Error("user not found");
+    }
+
+    const { password, ...userInfo } = user.toJSON();
+    return userInfo;
+  }
+
+  private validateToken(token: string): UserInfo {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded as UserInfo;
+  }
+
   onJoin(client: Client, options: any) {
-    const randomIdx = Math.floor(Math.random() * 1000);
-    const username = options.username || `GUEST-${randomIdx}`;
+    const { username } = client.auth as UserInfo;
 
     let player: Player | null = null;
 
-    console.log(`${client.sessionId} joined the game`);
+    console.log(`${username} joined the game`);
 
     if (this.state.players._indexes.size > 0) {
       player = new Player({
