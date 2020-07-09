@@ -14,17 +14,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    environment: 
+    environment:
       - MONGO_HOST=mongodb
       - MONGO_USERNAME=root
       - MONGO_PASSWORD=password
       - MONGO_DB_NAME=tictactoe
-    volumes: 
-      - ./:/home/app
-    ports: 
+    ports:
       - 2567:2567
-    depends_on: 
+    depends_on:
       - mongodb
 
-volumes: 
+volumes:
   mongodb-volume:

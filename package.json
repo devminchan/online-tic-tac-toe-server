@@ -28,6 +28,8 @@
     "@colyseus/monitor": "^0.12.2",
     "@colyseus/social": "^0.10.9",
     "@typegoose/typegoose": "^7.2.0",
+    "@types/bcrypt": "^3.0.0",
+    "bcrypt": "^5.0.0",
     "colyseus": "^0.13.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",

@@ -3,9 +3,10 @@ import UserModel from "../../models/UserModel";
 import { CreateUserRequest } from "./dtos";
 import BadRequest from "../../errors/exceptions/BadRequest";
 import NotFound from "../../errors/exceptions/NotFound";
+import bcrypt from "bcrypt";
 
 export const listUsers = async (req: Request, res: Response, next: any) => {
-  const list = await UserModel.find({});
+  const list = await UserModel.find().select(["-password"]);
   res.json(list);
 };
 
@@ -28,11 +29,16 @@ export const registerNewUser = async (
     throw new BadRequest("password must be longer than 8");
   }
 
+  const hashedPassword = await bcrypt.hash(cur.password, 10); // 패스워드 암호화
+
   const user = await UserModel.create({
     ...cur,
+    password: hashedPassword,
   });
 
-  res.status(201).json(user);
+  const { password, ...userInfo } = user.toJSON();
+
+  res.status(201).json(userInfo);
 };
 
 export const deleteUser = async (req: Request, res: Response, next: any) => {
