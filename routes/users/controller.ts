@@ -31,6 +31,12 @@ export const registerNewUser = async (
 
   const hashedPassword = await bcrypt.hash(cur.password, 10); // 패스워드 암호화
 
+  const found = await UserModel.findOne({ username: cur.username });
+
+  if (found) {
+    throw new BadRequest("username already exists!");
+  }
+
   const user = await UserModel.create({
     ...cur,
     password: hashedPassword,
