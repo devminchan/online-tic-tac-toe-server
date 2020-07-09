@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 
 import { GameRoom } from "./GameRoom";
 import router from "./routes";
-import UserModel, { User } from "./models/UserModel";
+import { handle404Error, handleError } from "./errors/handler";
 
 (async () => {
   await mongoose.connect(
@@ -21,15 +21,6 @@ import UserModel, { User } from "./models/UserModel";
       dbName: `${process.env.MONGO_DB_NAME || "tictactoe"}`,
     }
   );
-
-  const { _id: id } = await UserModel.create({
-    username: "hello",
-    password: "1234",
-  } as User);
-
-  const user = await UserModel.findById(id).exec();
-
-  console.log(user);
 
   const port = Number(process.env.PORT || 2567);
   const app = express();
@@ -56,6 +47,10 @@ import UserModel, { User } from "./models/UserModel";
   });
 
   app.use("/api", router);
+
+  // error handling
+  app.use(handle404Error);
+  app.use(handleError);
 
   gameServer.listen(port);
   console.log(`Listening on ${port}`);
