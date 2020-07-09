@@ -1,11 +1,8 @@
 import express from "express";
+import users from "./users";
 
 const router = express.Router();
 
-router.use("/auth", (req, res) => {
-  res.json({
-    message: "hello",
-  });
-});
+router.use("/users", users);
 
 export default router;
