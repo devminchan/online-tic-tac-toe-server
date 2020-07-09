@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import UserModel from "../../models/UserModel";
 import { CreateUserRequest } from "./dtos";
 import BadRequest from "../../errors/exceptions/BadRequest";
+import NotFound from "../../errors/exceptions/NotFound";
 
 export const listUsers = async (req: Request, res: Response, next: any) => {
   const list = await UserModel.find({});
@@ -39,7 +40,11 @@ export const deleteUser = async (req: Request, res: Response, next: any) => {
 
   const result = await UserModel.deleteOne({ _id: userId });
 
-  res.json({
-    status: result.ok,
-  });
+  if (result.deletedCount && result.deletedCount > 0) {
+    res.status(200).json({
+      message: "Ok",
+    });
+  } else {
+    throw new NotFound("User not found");
+  }
 };
