@@ -2,10 +2,10 @@ import { prop, getModelForClass } from "@typegoose/typegoose";
 
 export class User {
   @prop()
-  username: string;
+  username?: string;
 
   @prop()
-  password: string;
+  password?: string;
 }
 
 export default getModelForClass(User);

@@ -38,7 +38,7 @@ export class Player extends Schema {
 }
 
 interface GameResult {
-  winner?: string; // 'draw' is null
+  winner: string | null; // 'draw' is null
 }
 
 interface MarkCommand {
@@ -50,25 +50,24 @@ export class State extends Schema {
   players = new MapSchema<Player>();
 
   @type("number")
-  turnCount = 1;
+  turnCount: number = 1;
 
   @type("string")
-  nowPlayerId: string;
+  nowPlayerId?: string;
 
   @type([Mark])
   marks = new ArraySchema<Mark>();
 
   @type("boolean")
-  isOver = false;
+  isOver: boolean = false;
 
   constructor() {
     super();
-
     // init marks
     console.log("Init game state");
   }
 
-  createMark(playerId: string, point: number): Mark {
+  createMark(playerId: string, point: number): Mark | null {
     if (!this.checkPointIsAvailable(point)) {
       // 이미 mark가 놓여있는지 확인
       return null;
@@ -96,7 +95,7 @@ export class State extends Schema {
   }
 
   // 현재 상태가 게임오버 조건인지 확인
-  checkGameEnd(): GameResult {
+  checkGameEnd(): GameResult | null {
     if (this.turnCount >= MAX_MARKS) {
       return {
         winner: null,
@@ -105,12 +104,12 @@ export class State extends Schema {
 
     const isEnd = this._checkGameEnd(
       this.marks[this.marks.length - 1].point,
-      this.nowPlayerId
+      this.nowPlayerId!
     );
 
     if (isEnd) {
       return {
-        winner: this.players[this.nowPlayerId].username,
+        winner: this.players[this.nowPlayerId!].username,
       };
     }
 
@@ -118,7 +117,7 @@ export class State extends Schema {
   }
 
   // 다음턴 진행 작업
-  nextTurn() {
+  nextTurn(): void {
     this.turnCount += 1; // turnCount 증가
 
     const iterator = this.players._indexes.keys();
@@ -293,7 +292,7 @@ export class GameRoom extends Room<State> {
     const randomIdx = Math.floor(Math.random() * 1000);
     const username = options.username || `GUEST-${randomIdx}`;
 
-    let player: Player = null;
+    let player: Player | null = null;
 
     console.log(`${client.sessionId} joined the game`);
 

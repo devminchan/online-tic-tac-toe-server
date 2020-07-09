@@ -58,5 +58,5 @@ import UserModel, { User } from "./models/UserModel";
   app.use("/api", router);
 
   gameServer.listen(port);
-  console.log(`Listening on ws://localhost:${port}`);
+  console.log(`Listening on ${port}`);
 })();
