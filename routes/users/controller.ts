@@ -47,9 +47,18 @@ export const registerNewUser = async (req: Request, res: Response) => {
     throw new BadRequest("username already exists!");
   }
 
+  const userLength = await UserModel.count({});
+
+  // 처음 생성 되었을 때, 어드민 권한을 부여
+  let isAdmin = false;
+  if (userLength === 0) {
+    isAdmin = true;
+  }
+
   const user = await UserModel.create({
     ...cur,
     password: hashedPassword,
+    isAdmin,
   });
 
   const { password, ...userInfo } = user.toJSON();
