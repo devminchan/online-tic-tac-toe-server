@@ -18,11 +18,33 @@
           "hostPort": 2567,
           "protocol": "tcp"
         }
+      ],
+      "secrets": [
+        {
+          "name": "MONGO_URL",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:129403376983:secret:tic-tac-toe/MONGO_URL-RqiSvU"
+        },
+        {
+          "name": "MONGO_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:129403376983:secret:tic-tac-toe/MONGO_USERNAME-LjWx2z"
+        },
+        {
+          "name": "MONGO_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:129403376983:secret:tic-tac-toe/MONGO_PASSWORD-A2pZKk"
+        },
+        {
+          "name": "MONGO_DB_NAME",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:129403376983:secret:tic-tac-toe/MONGO_DB_NAME-x96JaO"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:129403376983:secret:tic-tac-toe/JWT_SECRET-FIjCdJ"
+        }
       ]
     }
   ],
   "cpu": "256",
-  "executionRoleArn": "arn:aws:iam::129403376983:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::129403376983:role/ecsSecretAccessRole",
   "family": "tic-tac-toe-task-definition",
   "memory": "512",
   "networkMode": "awsvpc",
