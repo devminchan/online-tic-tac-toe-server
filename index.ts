@@ -3,41 +3,61 @@ import express from "express";
 import cors from "cors";
 import { Server } from "colyseus";
 import { monitor } from "@colyseus/monitor";
+import mongoose from "mongoose";
 // import socialRoutes from "@colyseus/social/express"
 
 import { GameRoom } from "./GameRoom";
+import router from "./routes";
+import { handle404Error, handleError } from "./errors/handler";
 
-const port = Number(process.env.PORT || 2567);
-const app = express();
+(async () => {
+  const authField =
+    (process.env.MONGO_USERNAME || "root") +
+    ":" +
+    (process.env.MONGO_PASSWORD || "1234");
 
-app.use(cors());
-app.use(express.json());
+  const urlField =
+    process.env.MONGO_URL ||
+    (process.env.MONGO_HOST
+      ? `${process.env.MONGO_HOST}:27017/`
+      : "localhost:27017/");
 
-const server = http.createServer(app);
-const gameServer = new Server({
-  server,
-});
-
-// register your room handlers
-gameServer.define("game_room", GameRoom);
-
-/**
- * Register @colyseus/social routes
- *
- * - uncomment if you want to use default authentication (https://docs.colyseus.io/authentication/)
- * - also uncomment the import statement
- */
-// app.use("/", socialRoutes);
-
-// register colyseus monitor AFTER registering your room handlers
-app.use("/colyseus", monitor());
-
-// for health check
-app.get("/health-check", (req, res) => {
-  res.json({
-    status: "OK",
+  await mongoose.connect(`mongodb://${authField}@${urlField}`, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    dbName: `${process.env.MONGO_DB_NAME || "tictactoe"}`,
   });
-});
 
-gameServer.listen(port);
-console.log(`Listening on ws://localhost:${port}`);
+  const port = Number(process.env.PORT || 2567);
+  const app = express();
+
+  app.use(cors());
+  app.use(express.json());
+
+  const server = http.createServer(app);
+  const gameServer = new Server({
+    server,
+  });
+
+  // register your room handlers
+  gameServer.define("game_room", GameRoom);
+
+  // register colyseus monitor AFTER registering your room handlers
+  app.use("/colyseus", monitor());
+
+  // for health check
+  app.get("/health-check", (req, res) => {
+    res.json({
+      status: "OK",
+    });
+  });
+
+  app.use("/api", router);
+
+  // error handling
+  app.use(handle404Error);
+  app.use(handleError);
+
+  gameServer.listen(port);
+  console.log(`Listening on ${port}`);
+})();

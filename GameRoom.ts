@@ -1,5 +1,9 @@
 import { Room, Client } from "colyseus";
 import { Schema, type, ArraySchema, MapSchema } from "@colyseus/schema";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "./constrants";
+import UserModel from "./models/UserModel";
+import { UserPrinciple } from "./auth";
 
 export class Mark extends Schema {
   constructor(params: { playerId: string; turnNumber: number; point: number }) {
@@ -38,7 +42,7 @@ export class Player extends Schema {
 }
 
 interface GameResult {
-  winner?: string; // 'draw' is null
+  winner: string | null; // 'draw' is null
 }
 
 interface MarkCommand {
@@ -50,25 +54,24 @@ export class State extends Schema {
   players = new MapSchema<Player>();
 
   @type("number")
-  turnCount = 1;
+  turnCount: number = 1;
 
   @type("string")
-  nowPlayerId: string;
+  nowPlayerId?: string;
 
   @type([Mark])
   marks = new ArraySchema<Mark>();
 
   @type("boolean")
-  isOver = false;
+  isOver: boolean = false;
 
   constructor() {
     super();
-
     // init marks
     console.log("Init game state");
   }
 
-  createMark(playerId: string, point: number): Mark {
+  createMark(playerId: string, point: number): Mark | null {
     if (!this.checkPointIsAvailable(point)) {
       // 이미 mark가 놓여있는지 확인
       return null;
@@ -96,7 +99,7 @@ export class State extends Schema {
   }
 
   // 현재 상태가 게임오버 조건인지 확인
-  checkGameEnd(): GameResult {
+  checkGameEnd(): GameResult | null {
     if (this.turnCount >= MAX_MARKS) {
       return {
         winner: null,
@@ -105,12 +108,12 @@ export class State extends Schema {
 
     const isEnd = this._checkGameEnd(
       this.marks[this.marks.length - 1].point,
-      this.nowPlayerId
+      this.nowPlayerId!
     );
 
     if (isEnd) {
       return {
-        winner: this.players[this.nowPlayerId].username,
+        winner: this.players[this.nowPlayerId!].username,
       };
     }
 
@@ -118,7 +121,7 @@ export class State extends Schema {
   }
 
   // 다음턴 진행 작업
-  nextTurn() {
+  nextTurn(): void {
     this.turnCount += 1; // turnCount 증가
 
     const iterator = this.players._indexes.keys();
@@ -210,16 +213,8 @@ export class State extends Schema {
           break;
         }
 
-        console.log(`now checked: Y: ${tmpY}, X: ${tmpX}, ${point}`);
-
         const target = this.marks.find(
           (mark) => mark.point === tmpY * 19 + tmpX
-        );
-
-        console.log(
-          `target playerId: ${
-            target && target.playerId
-          }, now playerId: ${playerId}`
         );
 
         if (!target || target.playerId !== playerId) {
@@ -297,13 +292,45 @@ export class GameRoom extends Room<State> {
     });
   }
 
+  async onAuth(
+    client: Client,
+    options: any,
+    request: any
+  ): Promise<UserPrinciple> {
+    const token = options.accessToken;
+    let decoded: UserPrinciple | null;
+
+    try {
+      decoded = this.validateToken(token) as UserPrinciple;
+    } catch (e) {
+      throw new Error("jwt exception");
+    }
+
+    if (!decoded) {
+      throw new Error("can't recongnize user");
+    }
+
+    const user = await UserModel.findById(decoded._id);
+
+    if (!user) {
+      throw new Error("user not found");
+    }
+
+    const { password, ...userInfo } = user.toJSON();
+    return userInfo;
+  }
+
+  private validateToken(token: string): UserPrinciple {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded as UserPrinciple;
+  }
+
   onJoin(client: Client, options: any) {
-    const randomIdx = Math.floor(Math.random() * 1000);
-    const username = options.username || `GUEST-${randomIdx}`;
+    const { username } = client.auth as UserPrinciple;
 
-    let player: Player = null;
+    let player: Player | null = null;
 
-    console.log(`${client.sessionId} joined the game`);
+    console.log(`${username} joined the game`);
 
     if (this.state.players._indexes.size > 0) {
       player = new Player({
