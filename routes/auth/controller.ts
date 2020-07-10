@@ -3,17 +3,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { LoginRequest } from "./dtos";
 import UserModel from "../../models/UserModel";
-import NotFound from "../../errors/exceptions/NotFound";
-import BadRequest from "../../errors/exceptions/BadRequest";
 import { JWT_SECRET } from "../../constrants";
 import { Unauthorized } from "../../errors/exceptions/Unauthorized";
-import { UserInfo } from "../../auth";
+import { UserPrinciple } from "../../auth";
 
-export const loginWithUsername = async (
-  req: Request,
-  res: Response,
-  next: any
-) => {
+export const loginWithUsername = async (req: Request, res: Response) => {
   const lr = req.body as LoginRequest;
 
   const targetUser = await UserModel.findOne({ username: lr.username });
@@ -30,7 +24,7 @@ export const loginWithUsername = async (
         _id: targetUser._id,
         username: targetUser.username,
         isAdmin: targetUser.isAdmin,
-      } as UserInfo,
+      } as UserPrinciple,
       JWT_SECRET,
       {
         algorithm: "HS256",

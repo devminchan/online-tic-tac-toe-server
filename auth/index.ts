@@ -2,10 +2,10 @@ import { Request } from "express";
 import { DocumentType } from "@typegoose/typegoose";
 import { User } from "../models/UserModel";
 
-export type UserInfo = DocumentType<Omit<User, "password">>;
-
-export interface UserPrincipleRequest<T> extends Request {
-  user: T;
+export interface UserPrinciple extends Omit<User, "password"> {
+  _id: string;
 }
 
-export interface PrincipleRequest extends UserPrincipleRequest<UserInfo> {}
+export interface PrincipleRequest extends Request {
+  user?: UserPrinciple;
+}

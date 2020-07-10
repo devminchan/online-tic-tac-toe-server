@@ -2,8 +2,8 @@ import { Room, Client } from "colyseus";
 import { Schema, type, ArraySchema, MapSchema } from "@colyseus/schema";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "./constrants";
-import UserModel, { User } from "./models/UserModel";
-import { UserInfo } from "./auth";
+import UserModel from "./models/UserModel";
+import { UserPrinciple } from "./auth";
 
 export class Mark extends Schema {
   constructor(params: { playerId: string; turnNumber: number; point: number }) {
@@ -292,12 +292,16 @@ export class GameRoom extends Room<State> {
     });
   }
 
-  async onAuth(client: Client, options: any, request: any): Promise<UserInfo> {
+  async onAuth(
+    client: Client,
+    options: any,
+    request: any
+  ): Promise<UserPrinciple> {
     const token = options.accessToken;
-    let decoded: UserInfo | null;
+    let decoded: UserPrinciple | null;
 
     try {
-      decoded = this.validateToken(token) as UserInfo;
+      decoded = this.validateToken(token) as UserPrinciple;
     } catch (e) {
       throw new Error("jwt exception");
     }
@@ -316,13 +320,13 @@ export class GameRoom extends Room<State> {
     return userInfo;
   }
 
-  private validateToken(token: string): UserInfo {
+  private validateToken(token: string): UserPrinciple {
     const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded as UserInfo;
+    return decoded as UserPrinciple;
   }
 
   onJoin(client: Client, options: any) {
-    const { username } = client.auth as UserInfo;
+    const { username } = client.auth as UserPrinciple;
 
     let player: Player | null = null;
 

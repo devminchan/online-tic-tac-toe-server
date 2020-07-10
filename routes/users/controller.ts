@@ -4,17 +4,27 @@ import { CreateUserRequest } from "./dtos";
 import BadRequest from "../../errors/exceptions/BadRequest";
 import NotFound from "../../errors/exceptions/NotFound";
 import bcrypt from "bcrypt";
+import { PrincipleRequest } from "../../auth";
 
-export const listUsers = async (req: Request, res: Response, next: any) => {
+export const listUsers = async (req: Request, res: Response) => {
   const list = await UserModel.find().select(["-password"]);
   res.json(list);
 };
 
-export const registerNewUser = async (
-  req: Request,
-  res: Response,
-  next: any
-) => {
+export const getMyInfo = async (req: PrincipleRequest, res: Response) => {
+  const _id = req.user?._id;
+
+  const user = await UserModel.findById(_id);
+
+  if (!user) {
+    throw new NotFound("user not found");
+  }
+
+  const { password, ...userInfo } = user.toJSON();
+  res.send(userInfo);
+};
+
+export const registerNewUser = async (req: Request, res: Response) => {
   const cur = req.body as CreateUserRequest;
 
   if (
@@ -43,11 +53,24 @@ export const registerNewUser = async (
   });
 
   const { password, ...userInfo } = user.toJSON();
-
   res.status(201).json(userInfo);
 };
 
-export const deleteUser = async (req: Request, res: Response, next: any) => {
+export const deleteMe = async (req: PrincipleRequest, res: Response) => {
+  const userId: string = req.user!._id;
+
+  const result = await UserModel.deleteOne({ _id: userId });
+
+  if (result.deletedCount && result.deletedCount > 0) {
+    res.status(200).json({
+      message: "Ok",
+    });
+  } else {
+    throw new NotFound("user not found");
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response) => {
   const userId: string = req.params.id;
 
   const result = await UserModel.deleteOne({ _id: userId });
@@ -57,6 +80,6 @@ export const deleteUser = async (req: Request, res: Response, next: any) => {
       message: "Ok",
     });
   } else {
-    throw new NotFound("User not found");
+    throw new NotFound("user not found");
   }
 };

@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 
 import { GameRoom } from "./GameRoom";
 import router from "./routes";
-import { handle404Error, handleError, handleJwtError } from "./errors/handler";
+import { handle404Error, handleError } from "./errors/handler";
 
 (async () => {
   await mongoose.connect(
@@ -50,7 +50,6 @@ import { handle404Error, handleError, handleJwtError } from "./errors/handler";
 
   // error handling
   app.use(handle404Error);
-  app.use(handleJwtError);
   app.use(handleError);
 
   gameServer.listen(port);
