@@ -6,6 +6,20 @@ export const handle404Error = (req: Request, res: Response<any>, next: any) => {
   throw new NotFound();
 };
 
+export const handleJwtError = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: any
+) => {
+  if (err.name === "UnauthorizedError") {
+    res.status(err.status).send({ message: err.message });
+    return;
+  }
+
+  next();
+};
+
 export const handleError = (
   err: any,
   req: Request,

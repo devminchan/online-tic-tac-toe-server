@@ -1,9 +1,9 @@
 import { Room, Client } from "colyseus";
 import { Schema, type, ArraySchema, MapSchema } from "@colyseus/schema";
 import jwt from "jsonwebtoken";
-import { DocumentType } from "@typegoose/typegoose";
 import { JWT_SECRET } from "./constrants";
 import UserModel, { User } from "./models/UserModel";
+import { UserInfo } from "./auth";
 
 export class Mark extends Schema {
   constructor(params: { playerId: string; turnNumber: number; point: number }) {
@@ -231,8 +231,6 @@ export class State extends Schema {
   }
 }
 
-type UserInfo = DocumentType<Exclude<User, "password">>;
-
 export class GameRoom extends Room<State> {
   maxClients = 2;
 
@@ -301,7 +299,7 @@ export class GameRoom extends Room<State> {
     try {
       decoded = this.validateToken(token) as UserInfo;
     } catch (e) {
-      throw new Error('jwt exception');
+      throw new Error("jwt exception");
     }
 
     if (!decoded) {

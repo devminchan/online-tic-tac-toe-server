@@ -6,6 +6,9 @@ export class User {
 
   @prop({ required: true, minlength: 8 })
   password!: string;
+
+  @prop({ required: true, default: false })
+  isAdmin?: boolean = false;
 }
 
 export default getModelForClass(User);

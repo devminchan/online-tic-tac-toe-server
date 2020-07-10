@@ -6,6 +6,8 @@ import UserModel from "../../models/UserModel";
 import NotFound from "../../errors/exceptions/NotFound";
 import BadRequest from "../../errors/exceptions/BadRequest";
 import { JWT_SECRET } from "../../constrants";
+import { Unauthorized } from "../../errors/exceptions/Unauthorized";
+import { UserInfo } from "../../auth";
 
 export const loginWithUsername = async (
   req: Request,
@@ -17,7 +19,7 @@ export const loginWithUsername = async (
   const targetUser = await UserModel.findOne({ username: lr.username });
 
   if (!targetUser) {
-    throw new NotFound("user not found");
+    throw new Unauthorized("user not found");
   }
 
   const isCorrect = await bcrypt.compare(lr.password, targetUser.password);
@@ -27,8 +29,12 @@ export const loginWithUsername = async (
       {
         _id: targetUser._id,
         username: targetUser.username,
-      },
-      JWT_SECRET
+        isAdmin: targetUser.isAdmin,
+      } as UserInfo,
+      JWT_SECRET,
+      {
+        algorithm: "HS256",
+      }
     );
 
     res.send({
@@ -36,6 +42,6 @@ export const loginWithUsername = async (
       token,
     });
   } else {
-    throw new BadRequest("wrong password");
+    throw new Unauthorized("wrong password");
   }
 };
