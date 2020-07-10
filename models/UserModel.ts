@@ -1,10 +1,10 @@
-import { prop, getModelForClass, DocumentType } from "@typegoose/typegoose";
+import { prop, getModelForClass } from "@typegoose/typegoose";
 
 export class User {
-  @prop({ required: true, unique: true })
+  @prop({ required: true, unique: true, minlength: 3, maxlength: 16 })
   username!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, minlength: 8 })
   password!: string;
 }
 
