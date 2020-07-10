@@ -11,16 +11,22 @@ import router from "./routes";
 import { handle404Error, handleError } from "./errors/handler";
 
 (async () => {
-  await mongoose.connect(
-    `mongodb://${process.env.MONGO_USERNAME || "root"}:${
-      process.env.MONGO_PASSWORD || "1234"
-    }@${process.env.MONGO_HOST || "localhost"}:27017/`,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      dbName: `${process.env.MONGO_DB_NAME || "tictactoe"}`,
-    }
-  );
+  const authField =
+    (process.env.MONGO_USERNAME || "root") +
+    ":" +
+    (process.env.MONGO_PASSWORD || "1234");
+
+  const urlField =
+    process.env.MONGO_URL ||
+    (process.env.MONGO_HOST
+      ? `${process.env.MONGO_HOST}:27017/`
+      : "localhost:27017/");
+
+  await mongoose.connect(`mongodb://${authField}@${urlField}`, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    dbName: `${process.env.MONGO_DB_NAME || "tictactoe"}`,
+  });
 
   const port = Number(process.env.PORT || 2567);
   const app = express();
