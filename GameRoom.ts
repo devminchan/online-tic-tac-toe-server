@@ -296,10 +296,16 @@ export class GameRoom extends Room<State> {
 
   async onAuth(client: Client, options: any, request: any): Promise<UserInfo> {
     const token = options.accessToken;
-    const decoded = this.validateToken(token) as UserInfo;
+    let decoded: UserInfo | null;
+
+    try {
+      decoded = this.validateToken(token) as UserInfo;
+    } catch (e) {
+      throw new Error('jwt exception');
+    }
 
     if (!decoded) {
-      throw new Error("can't recognize payload");
+      throw new Error("can't recongnize user");
     }
 
     const user = await UserModel.findById(decoded._id);

@@ -31,9 +31,9 @@ export const loginWithUsername = async (
       JWT_SECRET
     );
 
-    res.setHeader("Authorization", token);
     res.send({
       message: "login success!",
+      token,
     });
   } else {
     throw new BadRequest("wrong password");
