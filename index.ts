@@ -4,7 +4,6 @@ import cors from "cors";
 import { Server } from "colyseus";
 import { monitor } from "@colyseus/monitor";
 import mongoose from "mongoose";
-// import socialRoutes from "@colyseus/social/express"
 
 import { GameRoom } from "./GameRoom";
 import router from "./routes";
