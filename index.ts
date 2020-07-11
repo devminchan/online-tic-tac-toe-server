@@ -18,8 +18,8 @@ import { handle404Error, handleError } from "./errors/handler";
   const urlField =
     process.env.MONGO_URL ||
     (process.env.MONGO_HOST
-      ? `${process.env.MONGO_HOST}:27017/`
-      : "localhost:27017/");
+      ? `${process.env.MONGO_HOST}:27017`
+      : "localhost:27017");
 
   console.log(`Connect to mongodb://${authField}@${urlField}`);
 
