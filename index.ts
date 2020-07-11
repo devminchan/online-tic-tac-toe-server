@@ -22,6 +22,8 @@ import { handle404Error, handleError } from "./errors/handler";
       ? `${process.env.MONGO_HOST}:27017/`
       : "localhost:27017/");
 
+  console.log(`Connect to mongodb://${authField}@${urlField}`);
+
   await mongoose.connect(`mongodb://${authField}@${urlField}`, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
