@@ -3,10 +3,6 @@ FROM node:12
 RUN mkdir -p /home/app
 WORKDIR /home/app
 
-RUN wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
-
-RUN ls
-
 COPY package.json /home/app
 COPY package-lock.json /home/app
 
