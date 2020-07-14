@@ -1,6 +1,7 @@
 import { Room, Client } from "colyseus";
 import { Schema, type, ArraySchema, MapSchema } from "@colyseus/schema";
 import jwt from "jsonwebtoken";
+import AsyncLock from "async-lock";
 import { JWT_SECRET } from "./constrants";
 import UserModel from "./models/UserModel";
 import { UserPrinciple } from "./auth";
@@ -23,8 +24,6 @@ export class Mark extends Schema {
   @type("number")
   point: number;
 }
-
-const MAX_MARKS = 361;
 
 export class Player extends Schema {
   constructor(params: { username: string; isFirst: boolean }) {
@@ -49,6 +48,11 @@ interface MarkCommand {
   point: number;
 }
 
+const MAX_MARKS = 361;
+const MAX_ROW = 19;
+
+const LOCK_KEY = "lock-key";
+
 export class State extends Schema {
   @type({ map: Player })
   players = new MapSchema<Player>();
@@ -64,6 +68,8 @@ export class State extends Schema {
 
   @type("boolean")
   isOver: boolean = false;
+
+  private lock = new AsyncLock();
 
   constructor() {
     super();
@@ -90,12 +96,14 @@ export class State extends Schema {
   }
 
   // 현재 플레이어 차례인지 확인
-  checkIsPlayerTurn(playerId: string): boolean {
-    if (this.nowPlayerId === playerId) {
-      return true;
-    }
+  async checkIsPlayerTurn(playerId: string): Promise<boolean> {
+    return await this.lock.acquire(LOCK_KEY, () => {
+      if (this.nowPlayerId === playerId) {
+        return true;
+      }
 
-    return false;
+      return false;
+    });
   }
 
   // 현재 상태가 게임오버 조건인지 확인
@@ -121,7 +129,7 @@ export class State extends Schema {
   }
 
   // 다음턴 진행 작업
-  nextTurn(): void {
+  async nextTurn(): Promise<void> {
     this.turnCount += 1; // turnCount 증가
 
     const iterator = this.players._indexes.keys();
@@ -129,10 +137,17 @@ export class State extends Schema {
     let nextId = iterator.next().value;
 
     // 플레이어 교체
-    if (nextId !== this.nowPlayerId) {
-      this.nowPlayerId = nextId;
-    } else {
-      this.nowPlayerId = iterator.next().value;
+    // add 2020.07.14 lock 추가
+    try {
+      await this.lock.acquire(LOCK_KEY, () => {
+        if (nextId !== this.nowPlayerId) {
+          this.nowPlayerId = nextId;
+        } else {
+          this.nowPlayerId = iterator.next().value;
+        }
+      });
+    } catch (e) {
+      console.error(e.message);
     }
   }
 
@@ -159,17 +174,17 @@ export class State extends Schema {
     }
 
     const checkTmpVars = (tmpY: number, tmpX: number): boolean => {
-      if (tmpY < 0 && tmpY >= 19) {
+      if (tmpY < 0 && tmpY >= MAX_ROW) {
         return false;
-      } else if (tmpX < 0 && tmpX >= 19) {
+      } else if (tmpX < 0 && tmpX >= MAX_ROW) {
         return false;
       }
 
       return true;
     };
 
-    let y = Math.floor(point / 19);
-    let x = point % 19;
+    let y = Math.floor(point / MAX_ROW);
+    let x = point % MAX_ROW;
 
     for (let i = 0; i < 8; i++) {
       let j = 0;
@@ -234,7 +249,7 @@ export class State extends Schema {
 export class GameRoom extends Room<State> {
   maxClients = 2;
 
-  onCreate(options: any) {
+  async onCreate(options: any) {
     console.log("GameRoom created!", options);
     this.setState(new State());
 
@@ -246,7 +261,8 @@ export class GameRoom extends Room<State> {
       }
 
       // 현재 자신 턴이 아니면 작업 중지
-      if (!this.state.checkIsPlayerTurn(client.sessionId)) {
+      const isMyTurn = await this.state.checkIsPlayerTurn(client.sessionId);
+      if (!isMyTurn) {
         client.send("messages", "[SYSTEM] now is opponent turn");
         return;
       }
@@ -257,7 +273,7 @@ export class GameRoom extends Room<State> {
       );
 
       const gameResult = this.state.checkGameEnd();
-      this.state.nextTurn(); // 다음턴 진행 작업, 플레이어 교체 및 turnCount 증가
+      await this.state.nextTurn(); // 다음턴 진행 작업, 플레이어 교체 및 turnCount 증가
 
       if (!newMark) {
         // 마크가 생성되지 않았을 때
