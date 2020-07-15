@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import AsyncLock from "async-lock";
 import { JWT_SECRET } from "./constrants";
 import UserModel from "./models/UserModel";
-import { UserPrinciple } from "./auth";
+import { UserPrincipal } from "./auth";
 
 export class Mark extends Schema {
   constructor(params: { playerId: string; turnNumber: number; point: number }) {
@@ -312,12 +312,12 @@ export class GameRoom extends Room<State> {
     client: Client,
     options: any,
     request: any
-  ): Promise<UserPrinciple> {
+  ): Promise<UserPrincipal> {
     const token = options.accessToken;
-    let decoded: UserPrinciple | null;
+    let decoded: UserPrincipal | null;
 
     try {
-      decoded = this.validateToken(token) as UserPrinciple;
+      decoded = this.validateToken(token) as UserPrincipal;
     } catch (e) {
       throw new Error("jwt exception");
     }
@@ -336,13 +336,13 @@ export class GameRoom extends Room<State> {
     return userInfo;
   }
 
-  private validateToken(token: string): UserPrinciple {
+  private validateToken(token: string): UserPrincipal {
     const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded as UserPrinciple;
+    return decoded as UserPrincipal;
   }
 
   onJoin(client: Client, options: any) {
-    const { username } = client.auth as UserPrinciple;
+    const { username } = client.auth as UserPrincipal;
 
     let player: Player | null = null;
 

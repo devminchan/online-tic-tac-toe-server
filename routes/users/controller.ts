@@ -4,14 +4,14 @@ import { CreateUserRequest } from "./dtos";
 import BadRequest from "../../errors/exceptions/BadRequest";
 import NotFound from "../../errors/exceptions/NotFound";
 import bcrypt from "bcrypt";
-import { PrincipleRequest } from "../../auth";
+import { PrincipalRequest } from "../../auth";
 
 export const listUsers = async (req: Request, res: Response) => {
   const list = await UserModel.find().select(["-password"]);
   res.json(list);
 };
 
-export const getMyInfo = async (req: PrincipleRequest, res: Response) => {
+export const getMyInfo = async (req: PrincipalRequest, res: Response) => {
   const _id = req.user?._id;
 
   const user = await UserModel.findById(_id);
@@ -65,7 +65,7 @@ export const registerNewUser = async (req: Request, res: Response) => {
   res.status(201).json(userInfo);
 };
 
-export const deleteMe = async (req: PrincipleRequest, res: Response) => {
+export const deleteMe = async (req: PrincipalRequest, res: Response) => {
   const userId: string = req.user!._id;
 
   const result = await UserModel.deleteOne({ _id: userId });
