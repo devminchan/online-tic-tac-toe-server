@@ -273,7 +273,6 @@ export class GameRoom extends Room<State> {
       );
 
       const gameResult = this.state.checkGameEnd();
-      await this.state.nextTurn(); // 다음턴 진행 작업, 플레이어 교체 및 turnCount 증가
 
       if (!newMark) {
         // 마크가 생성되지 않았을 때
@@ -282,6 +281,8 @@ export class GameRoom extends Room<State> {
       } else {
         this.broadcast("gameEvent", newMark.toJSON());
       }
+
+      await this.state.nextTurn(); // 다음턴 진행 작업, 플레이어 교체 및 turnCount 증가
 
       if (gameResult) {
         // when game ends
