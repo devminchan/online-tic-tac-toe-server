@@ -5,7 +5,7 @@ import { LoginRequest } from "./dtos";
 import UserModel from "../../models/UserModel";
 import { JWT_SECRET } from "../../constrants";
 import { Unauthorized } from "../../errors/exceptions/Unauthorized";
-import { UserPrinciple } from "../../auth";
+import { UserPrincipal } from "../../auth";
 
 export const loginWithUsername = async (req: Request, res: Response) => {
   const lr = req.body as LoginRequest;
@@ -24,7 +24,7 @@ export const loginWithUsername = async (req: Request, res: Response) => {
         _id: targetUser._id,
         username: targetUser.username,
         isAdmin: targetUser.isAdmin,
-      } as UserPrinciple,
+      } as UserPrincipal,
       JWT_SECRET,
       {
         algorithm: "HS256",

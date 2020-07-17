@@ -1,14 +1,14 @@
 import jwt from "express-jwt";
 import { Response, NextFunction } from "express";
 import { JWT_SECRET } from "../constrants";
-import { PrincipleRequest } from ".";
+import { PrincipalRequest } from ".";
 import AccessDenined from "../errors/exceptions/AccessDenied";
 import { Unauthorized } from "../errors/exceptions/Unauthorized";
 
 export const decodeJwt = jwt({ secret: JWT_SECRET, algorithms: ["HS256"] });
 
 export const userGuard = (
-  req: PrincipleRequest,
+  req: PrincipalRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -20,7 +20,7 @@ export const userGuard = (
 };
 
 export const adminGuard = (
-  req: PrincipleRequest,
+  req: PrincipalRequest,
   res: Response,
   next: NextFunction
 ) => {
